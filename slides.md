@@ -17,7 +17,7 @@ class: text-center
 drawings:
   persist: false
 # slide transition: https://sli.dev/guide/animations.html#slide-transitions
-transition: slide-left
+transition: fade
 # enable MDC Syntax: https://sli.dev/features/mdc
 mdc: true
 # duration of the presentation
@@ -33,7 +33,7 @@ addons:
   </h1>
 
   <p class="subtitle-text text-2xl mt-4 font-medium tracking-wide">
-    Build powerful database extensions from scratch
+    Learn how to build database extensions
   </p>
 
   <div class="mt-14 flex items-center gap-10 text-lg metadata-row">
@@ -535,11 +535,9 @@ GEN=ninja make debug
 ```
 DuckDB v1.5.0-dev5760 (Development Version, 3f41e38ba7)
 Enter ".help" for usage hints.
-memory D SELECT easter(3000);
+SELECT easter(3000);
 ```
 
----
-class: px-12
 ---
 
 # Vector Executors
@@ -688,6 +686,7 @@ SELECT year, easter(year) FROM (SELECT * as year FROM range(1980, 2000));
 ```
 
 ---
+transition: fade-out
 layout: cover
 background: take-a-break.png
 backgroundColor: rgba(1.0, 0, 0, 0.5)
@@ -695,17 +694,48 @@ backgroundColor: rgba(1.0, 0, 0, 0.5)
 
 # Time for a Break!
 
+<FlipClock :minutes="10" :seconds="0" />
+
+<div class="mt-6 text-xl opacity-90">
+
 ### Remember to talk with the people next to you.
-#### Restrooms. Coffee.
-#### Build on top of the extension.
+#### Tasks: Restrooms. Build on top of the extension.
+
+</div>
 
 
+---
+transition: fade
 ---
 
 # Questions and Answers
 
 Questions on material covered so far.
 
+---
+transition: slide-up
+---
+
+# Common Points of Confusion
+
+*A `ScalarFunction` can have multiple inputs and a single output.*
+
+In C++ use smart pointers `unique_ptr` and `shared_ptr`.
+
+DuckDB provides some classes like `vector` instead of `std::vector`.
+
+Prefer the `debug` build target because it catches more problems early.
+
+Use `lldb` with a breakpoint on the first C++ exception.
+
+Strings are stored using `string_t` rather than `std::string`.  Everything is using UTF-8.
+
+You can fold constant arguments for `ScalarFunction`s in the `bind` phase.
+
+Look into `ScalarFunction`'s `NULL` handling and stability flags.
+
+---
+transition: slide-up
 ---
 
 # Table Functions
@@ -719,6 +749,7 @@ We are going to need to use `bind` and `global_init` callbacks so that DuckDB kn
 ---
 
 # Table Function Example
+We're going to re-implement `range()` called `incremental_sequence()`.
 
 ```sql
 SELECT * from incremental_sequence(100, 110);
@@ -743,6 +774,16 @@ SELECT * from incremental_sequence(100, 110);
 
 ---
 
+# Update to step-3
+
+If you're following along, update to the `step-3` `git` tag and build.
+
+```sh
+GEN=ninja make debug
+./build/debug/duckdb
+```
+
+---
 
 # `incremental_sequence()` Implementation
 Start by defining the `TableFunction`
@@ -878,7 +919,7 @@ void IncrementalSequenceFunc(ClientContext &context, TableFunctionInput &data, D
 ```
 ````
 
-----
+---
 
 # `incremental_sequence()` Performance
 
@@ -899,14 +940,24 @@ EXPLAIN ANALYZE SELECT * FROM incremental_sequence(0, 100000000000);
 
 ---
 
+# Update to step-5
+
+If you're following along, update to the `step-5` `git` tag and build.
+
+```sh
+GEN=ninja make debug
+./build/debug/duckdb
+```
+
+---
+transition: slide-up
+---
+
 # `incremental_sequence()` Parallelism
 
-Faster performance using multiple threads.
+Faster performance is possible by using threads.
 
-The sequence may not be returned in order but all values will be present.  We will also return the `id` of the thread that produced the value.
-
-The `GlobalInit` data will now have a queue, and the `LocalInit` data will have the current item in progress from that queue.
-
+We will now split the sequence's values up by the number of available threads, `GlobalInit` will now have a queue, and the `LocalInit` data will have the current item of work.
 
 ```c [workshop_extension.cpp]{10}{lines:true,startLine:1}
 static void LoadInternal(ExtensionLoader &loader) {
@@ -926,7 +977,7 @@ static void LoadInternal(ExtensionLoader &loader) {
 
 ---
 
-# `incremental_sequence()` Parallism
+# `incremental_sequence()` Parallelism
 
 Need to enhance the `bind`, `global` and `local` data for assigning work over the sequence
 
@@ -986,8 +1037,6 @@ struct IncrementalSequenceGlobalState : public GlobalTableFunctionState {
 ````
 
 ---
-
-
 
 # `incremental_sequence()` `GlobalInit`
 The `GlobalInit` class will have a queue of work for threads to execute.
@@ -1153,9 +1202,8 @@ unique_ptr<FunctionData> IncrementalSequenceFuncBind(ClientContext &context, Tab
 
 ---
 
-# `incremental_sequence()`
-
-Multithreaded Performance
+# `incremental_sequence()` Threaded Performance
+More threads means more throughput.
 
 ```sh
 ./build/release/duckdb -c "set threads=N; select sum(value) from incremental_sequence(0, 10000000000);"
@@ -1269,6 +1317,22 @@ WHERE a.value = b.value;
 
 ---
 
+# Wrapping Up `TableFunction`
+
+The API for `TableFunction` is much larger than the API for `ScalarFunction`.
+
+Not covered on slides:
+
+- **Projection** - Passing the columns of interest to a TableFunction and only having it produce those columns.
+- **Filter pushdown** - Send the filters applied to a table function so it can optimize what data it produces.
+- **Filter pruning** - Don't emit columns if the function can filter them.
+- **Varargs** - Variable arguments
+- **Named Arguments** - Optional named arguments for Table functions.
+
+---
+transition: slide-up
+---
+
 # Publishing Extensions
 
 It is easy to publish a community extension—just open a PR.
@@ -1297,8 +1361,42 @@ repo:
   ref: abcdefg1234567890
 ```
 
+
+---
+transition: fade
+layout: center
+class: text-center
 ---
 
-# Questions and Answers
+# Thank You!
 
-Thanks for attending, it's time for your questions.
+<p class="text-xl text-gray-400 mt-2 mb-10">Questions, comments, or ideas for extensions?</p>
+
+<div class="flex flex-col items-center gap-8">
+  <div class="flex items-center gap-4">
+    <span class="text-6xl">🚜</span>
+    <span class="text-5xl font-bold bg-gradient-to-r from-yellow-400 to-orange-500 bg-clip-text text-transparent">Query.Farm</span>
+  </div>
+
+  <p class="text-gray-400 text-lg max-w-lg">Building DuckDB extensions for the community</p>
+
+  <div class="flex items-center gap-10 text-lg">
+    <a href="https://query.farm" class="flex items-center gap-2 text-yellow-500 hover:text-yellow-300 transition-colors font-medium">
+      <carbon:globe class="text-xl" />
+      <span>query.farm</span>
+    </a>
+    <a href="https://github.com/Query-farm" class="flex items-center gap-2 text-gray-400 hover:text-yellow-400 transition-colors">
+      <carbon:logo-github class="text-xl" />
+      <span>Query-farm</span>
+    </a>
+    <a href="mailto:hello@query.farm" class="flex items-center gap-2 text-gray-400 hover:text-yellow-400 transition-colors">
+      <carbon:email class="text-xl" />
+      <span>hello@query.farm</span>
+    </a>
+  </div>
+</div>
+
+<div class="absolute bottom-8 left-0 right-0 flex justify-between px-12 text-sm text-gray-500">
+  <span>Rusty Conover</span>
+  <a href="https://github.com/Query-farm/workshop-1" class="text-yellow-600 hover:text-yellow-400">github.com/Query-farm/workshop-1</a>
+</div>
