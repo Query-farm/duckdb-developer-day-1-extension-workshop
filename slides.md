@@ -25,7 +25,6 @@ duration: 2hrs
 # addons
 addons:
   - slidev-addon-excalidraw
-theme: default
 colorSchema: dark
 
 title: DuckDB Developer Day 1 - Extension Workshop
