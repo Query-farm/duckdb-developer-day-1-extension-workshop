@@ -4,8 +4,6 @@ theme: seriph
 # random image from a curated Unsplash collection by Anthony
 # like them? see https://unsplash.com/collections/94734566/slidev
 background: title.png
-# some information about your slides (markdown enabled)
-title: DuckDB Extension Workshop
 info: |
   ## Learn how to build a DuckDB Extension
   Presentation slides for developers.
