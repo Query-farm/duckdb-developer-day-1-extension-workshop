@@ -25,6 +25,8 @@ duration: 2hrs
 # addons
 addons:
   - slidev-addon-excalidraw
+theme: default
+colorSchema: dark
 ---
 
 <div class="flex flex-col items-center justify-center">
