@@ -27,6 +27,10 @@ addons:
   - slidev-addon-excalidraw
 theme: default
 colorSchema: dark
+
+title: DuckDB Developer Day 1 - Extension Workshop
+description: Learn how to build database extensions
+image: /title.png
 ---
 
 <div class="flex flex-col items-center justify-center">
@@ -83,10 +87,6 @@ colorSchema: dark
   text-shadow: 0 1px 4px rgba(0,0,0,0.8);
 }
 </style>
-
-<!--
-The last comment block of each slide will be treated as slide notes. It will be visible and editable in Presenter Mode along with the slide. [Read more in the docs](https://sli.dev/guide/syntax.html#notes)
--->
 
 ---
 transition: fade-out
